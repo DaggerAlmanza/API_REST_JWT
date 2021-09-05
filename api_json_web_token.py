@@ -103,7 +103,7 @@ def delete_user(public_id):
     db.session.delete(user)
     db.session.commit()
 
-    return jsonify({'messaje': 'El usuario ha sido borrado correctamente'})
+    return jsonify({'messaje': 'El usuario ha sido eliminado correctamente'})
 
 
 @app.route('/login')
