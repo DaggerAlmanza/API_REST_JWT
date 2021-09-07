@@ -3,6 +3,7 @@ import os
 import uuid
 
 from datetime import datetime, timedelta
+from functools import wraps
 from flask import Flask, request, jsonify, make_response
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
@@ -15,6 +16,7 @@ directorio = os.path.abspath(os.path.dirname(__file__))
 app.config['SECRET_KEY'] = 'Dramyson1024'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' +\
                             os.path.join(directorio, 'todo.sqlite')
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
 Migrate(app, db)
@@ -35,8 +37,35 @@ class Todo(db.Model):
     user_id = db.Column(db.Integer)
 
 
+def token_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+
+        token = None
+
+        if 'x-access-token' in request.headers:
+            token = request.headers['x-access-token']
+
+        if not token:
+            return jsonify({'message': 'Falta el token!'}), 401
+
+        try:
+            data = jwt.decode(token,
+                              app.config['SECRET_KEY'],
+                              algorithms='HS256')
+            usuario_actual = User.query.filter_by(
+                                    public_id=data['public_id']).first()
+        except:
+            return jsonify({'message': 'El token es ivalido'})
+
+        return f(usuario_actual, *args, **kwargs)
+
+    return decorated
+
+
 @app.route('/user', methods=['GET'])
-def get_all_users():
+@token_required
+def consulta_de_usuarios(usuario_actual):
     users = User.query.all()
     output = []
 
@@ -51,7 +80,7 @@ def get_all_users():
 
 
 @app.route('/user/<public_id>', methods=['GET'])
-def get_one_user(public_id):
+def consulta_usuario(public_id):
     user = User.query.filter_by(public_id=public_id).first()
 
     if not user:
@@ -67,7 +96,7 @@ def get_one_user(public_id):
 
 
 @app.route('/user', methods=['POST'])
-def create_user():
+def creacion_de_usuario():
     data = request.get_json()
     hashed_password = generate_password_hash(data['password'], method='sha256')
     new_user = User(
@@ -82,7 +111,7 @@ def create_user():
 
 
 @app.route('/user/<public_id>', methods=['PUT'])
-def promote_user(public_id):
+def administrador(public_id):
     user = User.query.filter_by(public_id=public_id).first()
 
     if not user:
@@ -95,7 +124,7 @@ def promote_user(public_id):
 
 
 @app.route('/user/<public_id>', methods=['DELETE'])
-def delete_user(public_id):
+def borrar_usuario(public_id):
     user = User.query.filter_by(public_id=public_id).first()
 
     if not user:
