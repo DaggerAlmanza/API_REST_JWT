@@ -22,7 +22,7 @@ db = SQLAlchemy(app)
 Migrate(app, db)
 
 
-class User(db.Model):
+class Usuario(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     public_id = db.Column(db.String(50), unique=True)
     name = db.Column(db.String(50))
@@ -53,10 +53,10 @@ def token_required(f):
             data = jwt.decode(token,
                               app.config['SECRET_KEY'],
                               algorithms='HS256')
-            usuario_actual = User.query.filter_by(
+            usuario_actual = Usuario.query.filter_by(
                                     public_id=data['public_id']).first()
         except:
-            return jsonify({'message': 'El token es ivalido'})
+            return jsonify({'message': 'El token es invalido'})
 
         return f(usuario_actual, *args, **kwargs)
 
@@ -66,7 +66,12 @@ def token_required(f):
 @app.route('/user', methods=['GET'])
 @token_required
 def consulta_de_usuarios(usuario_actual):
-    users = User.query.all()
+
+    if not usuario_actual.admin:
+        return jsonify({'message': 'No puede realizar esta función,' + ' ' +
+                                'no eres un usuario administrador'})
+
+    users = Usuario.query.all()
     output = []
 
     for user in users:
@@ -80,8 +85,14 @@ def consulta_de_usuarios(usuario_actual):
 
 
 @app.route('/user/<public_id>', methods=['GET'])
-def consulta_usuario(public_id):
-    user = User.query.filter_by(public_id=public_id).first()
+@token_required
+def consulta_usuario(usuario_actual, public_id):
+
+    if not usuario_actual.admin:
+        return jsonify({'message': 'No puede realizar esta función,' + ' ' +
+                                'no eres un usuario administrador'})
+
+    user = Usuario.query.filter_by(public_id=public_id).first()
 
     if not user:
         return jsonify({'messaje': 'Usuario no encontrado!'})
@@ -96,10 +107,16 @@ def consulta_usuario(public_id):
 
 
 @app.route('/user', methods=['POST'])
-def creacion_de_usuario():
+@token_required
+def creacion_de_usuario(usuario_actual):
+
+    if not usuario_actual.admin:
+        return jsonify({'message': 'No puede realizar esta función,' + ' ' +
+                                'no eres un usuario administrador'})
+
     data = request.get_json()
     hashed_password = generate_password_hash(data['password'], method='sha256')
-    new_user = User(
+    new_user = Usuario(
                     public_id=str(uuid.uuid4()),
                     name=data['name'],
                     password=hashed_password,
@@ -111,8 +128,14 @@ def creacion_de_usuario():
 
 
 @app.route('/user/<public_id>', methods=['PUT'])
-def administrador(public_id):
-    user = User.query.filter_by(public_id=public_id).first()
+@token_required
+def administrador(usuario_actual, public_id):
+
+    if not usuario_actual.admin:
+        return jsonify({'message': 'No puede realizar esta función,' + ' ' +
+                                'no eres un usuario administrador'})
+
+    user = Usuario.query.filter_by(public_id=public_id).first()
 
     if not user:
         return jsonify({'messaje': 'Usuario no encontrado!'})
@@ -120,12 +143,18 @@ def administrador(public_id):
     user.admin = True
     db.session.commit()
 
-    return jsonify({'messaje': 'El usuaro ha sido promovido'})
+    return jsonify({'messaje': 'El usuario ha sido promovido y es ahora administrador'})
 
 
 @app.route('/user/<public_id>', methods=['DELETE'])
-def borrar_usuario(public_id):
-    user = User.query.filter_by(public_id=public_id).first()
+@token_required
+def borrar_usuario(usuario_actual, public_id):
+
+    if not usuario_actual.admin:
+        return jsonify({'message': 'No puede realizar esta función,' + ' ' +
+                                'no eres un usuario administrador'})
+
+    user = Usuario.query.filter_by(public_id=public_id).first()
 
     if not user:
         return jsonify({'messaje': 'Usuario no encontrado!'})
@@ -147,7 +176,7 @@ def login():
                                 }
                             )
 
-    user = User.query.filter_by(name=auth.username).first()
+    user = Usuario.query.filter_by(name=auth.username).first()
 
     if not user:
         return make_response(
@@ -174,6 +203,42 @@ def login():
                                 }
                             )
 
+
+@app.route('/todo', methods=['GET'])
+@token_required
+def consulta_de_usuarios_todos(usuario_actual):
+    return ""
+
+
+@app.route('/todo/<todo_id>', methods=['GET'])
+@token_required
+def consulta_usuario_todo(usuario_actual, todo_id):
+    return ""
+
+
+@app.route('/todo', methods=['POST'])
+@token_required
+def creacion_de_usuario_todo(usuario_actual):
+    data = request.get_json()
+
+    new_todo = Todo(text=data['text'],
+                    complete=False,
+                    user_id=usuario_actual.id)
+    db.session.add(new_todo)
+    db.session.commit()
+    return jsonify({'message': 'Mensaje enviado'})
+
+
+@app.route('/todo/<todo_id>', methods=['PUT'])
+@token_required
+def completa_todos(usuario_actual, todo_id):
+    return ""
+
+
+@app.route('/todo/<todo_id>', methods=['DELETE'])
+@token_required
+def borrar_todo(usuario_actual, todo_id):
+    return ""
 
 # if __name__ == '__main__':
 #     app.run(debug=True)
