@@ -11,7 +11,6 @@ from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
 
-
 directorio = os.path.abspath(os.path.dirname(__file__))
 app.config['SECRET_KEY'] = 'Dramyson1024'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' +\
@@ -207,13 +206,34 @@ def login():
 @app.route('/todo', methods=['GET'])
 @token_required
 def consulta_de_usuarios_todos(usuario_actual):
-    return ""
+    todos = Todo.query.filter_by(user_id=usuario_actual.id).all()
+
+    output = []
+
+    for todo in todos:
+        todo_data = {}
+        todo_data['id'] = todo.id
+        todo_data['text'] = todo.text
+        todo_data['complete'] = todo.complete
+        output.append(todo_data)
+
+    return jsonify({'todos': output})
 
 
 @app.route('/todo/<todo_id>', methods=['GET'])
 @token_required
 def consulta_usuario_todo(usuario_actual, todo_id):
-    return ""
+    todo = Todo.query.filter_by(id=todo_id, user_id=usuario_actual.id).first()
+
+    if not todo:
+        return jsonify({'message': 'No se encontro el id'})
+    
+    todo_data = {}
+    todo_data['id'] = todo.id
+    todo_data['text'] = todo.text
+    todo_data['complete'] = todo.complete
+
+    return jsonify(todo_data)
 
 
 @app.route('/todo', methods=['POST'])
@@ -232,13 +252,28 @@ def creacion_de_usuario_todo(usuario_actual):
 @app.route('/todo/<todo_id>', methods=['PUT'])
 @token_required
 def completa_todos(usuario_actual, todo_id):
-    return ""
+    todo = Todo.query.filter_by(id=todo_id, user_id=usuario_actual.id).first()
+
+    if not todo:
+        return jsonify({'message': 'No se encontro el id del usuario'})
+
+    todo.complete = True
+    db.session.commit()
+    return jsonify({'message': 'Todos los item han sido completados'})
 
 
 @app.route('/todo/<todo_id>', methods=['DELETE'])
 @token_required
 def borrar_todo(usuario_actual, todo_id):
-    return ""
+    todo = Todo.query.filter_by(id=todo_id, user_id=usuario_actual.id).first()
+
+    if not todo:
+        return jsonify({'message': 'No se encontro el id del usuario'})
+
+    db.session.delete(todo)
+    db.session.commit()
+
+    return jsonify({'message': 'Todo el item ha sido borrado'})
 
 # if __name__ == '__main__':
 #     app.run(debug=True)
