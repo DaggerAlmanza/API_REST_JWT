@@ -106,7 +106,6 @@ def consulta_usuario(usuario_actual, public_id):
 
 
 @app.route('/user', methods=['POST'])
-@token_required
 def creacion_de_usuario(usuario_actual):
 
     if not usuario_actual.admin:
@@ -227,7 +226,7 @@ def consulta_usuario_todo(usuario_actual, todo_id):
 
     if not todo:
         return jsonify({'message': 'No se encontro el id'})
-    
+
     todo_data = {}
     todo_data['id'] = todo.id
     todo_data['text'] = todo.text
@@ -274,6 +273,3 @@ def borrar_todo(usuario_actual, todo_id):
     db.session.commit()
 
     return jsonify({'message': 'Todo el item ha sido borrado'})
-
-# if __name__ == '__main__':
-#     app.run(debug=True)
