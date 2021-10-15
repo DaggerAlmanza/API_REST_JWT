@@ -1,24 +1,14 @@
 import jwt
-import os
 import uuid
 
 from datetime import datetime, timedelta
 from functools import wraps
-from flask import Flask, request, jsonify, make_response
-from flask_migrate import Migrate
-from flask_sqlalchemy import SQLAlchemy
+from flask import request, jsonify, make_response
 from werkzeug.security import generate_password_hash, check_password_hash
 
-from modules.processors import get_user_processor, get_all_users_processor
+from modules.processors import Processors
 
-app = Flask(__name__)
-
-app.config["SECRET_KEY"] = "Dramyson1024"
-app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///userpool.sqlite"
-app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-
-db = SQLAlchemy(app)
-Migrate(app, db)
+from main import app
 
 
 def token_required(f):
@@ -39,7 +29,7 @@ def token_required(f):
                 app.config["SECRET_KEY"],
                 algorithms="HS256")
 
-            current_user = get_user_processor(data["public_id"])
+            current_user = Processors().get_user_processor(data["public_id"])
 
         except Exception:
 
@@ -58,7 +48,7 @@ def get_user(current_user):
         return jsonify({"message": "No puede realizar esta función," + " " +
                                 "no eres un usuario administrador"})
 
-    output = get_all_users_processor()
+    output = Processors().get_all_users_processor()
     return jsonify({"users": output})
 
 
@@ -147,21 +137,23 @@ def login():
 
     if not auth or not auth.username or not auth.password:
         return make_response(
-                            "No pudo ser verificado",
-                            401, {
-                             "www-Authenticate": "Basic realm="Inicia Sesion!""
-                                }
-                            )
+                        "No pudo ser verificado",
+                        401,
+                        {
+                            'www-Authenticate': 'Basic realm="Inicia Sesion!"'
+                    }
+                )
 
     user = Usuario.query.filter_by(name=auth.username).first()
 
     if not user:
         return make_response(
-                            "No pudo ser verificado",
-                            401, {
-                             "www-Authenticate": "Basic realm="Inicia Sesion!""
-                                }
-                            )
+                        "No pudo ser verificado",
+                        401,
+                        {
+                            'www-Authenticate': 'Basic realm="Inicia Sesion!"'
+                    }
+                )
 
     if check_password_hash(user.password, auth.password):
         token = jwt.encode({
@@ -175,10 +167,11 @@ def login():
 
     return make_response(
                         "No pudo ser verificado",
-                        401, {
-                        "www-Authenticate": "Basic realm=Inicia Sesion!"
-                                }
-                            )
+                        401,
+                        {
+                            'www-Authenticate': 'Basic realm="Inicia Sesion!"'
+                    }
+                )
 
 
 @app.route("/todo", methods=["GET"])
@@ -252,3 +245,4 @@ def borrar_todo(usuario_actual, todo_id):
     db.session.commit()
 
     return jsonify({"message": "Todo el item ha sido borrado"})
+
