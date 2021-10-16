@@ -9,6 +9,8 @@ from modules.processors import Processors
 
 from main import app
 
+sign_no_ad = "No puede realizar esta función, no eres un usuario administrador"
+
 
 def token_required(f):
     @wraps(f)
@@ -58,8 +60,8 @@ def get_all_users(current_user) -> json:
     """
 
     if not current_user.admin:
-        return jsonify({"message": "No puede realizar esta función," + " " +
-                                "no eres un usuario administrador"})
+        return jsonify({"message": sign_no_ad})
+
 
     output = Processors().get_all_users_processor()
     return jsonify({"users": output})
@@ -81,8 +83,7 @@ def get_one_user(current_user, public_id: str) -> json:
     """
 
     if not current_user.admin:
-        return jsonify({"message": "No puede realizar esta función," + " " +
-                                "no eres un usuario administrador"})
+        return jsonify({"message": sign_no_ad})
 
     user = Processors().get_user_processor(public_id)
 
@@ -107,8 +108,7 @@ def create_user(current_user) -> json:
     """
 
     if not current_user.admin:
-        return jsonify({"message": "No puede realizar esta función," + " " +
-                                "no eres un usuario administrador"})
+        return jsonify({"message": sign_no_ad})
 
     data = request.get_json()
     hashed_password = generate_password_hash(data["password"], method="sha256")
@@ -131,8 +131,7 @@ def promote_user(current_user, public_id: str) -> json:
     """
 
     if not current_user.admin:
-        return jsonify({"message": "No puede realizar esta función," + " " +
-                                "no eres un usuario administrador"})
+        return jsonify({"message": sign_no_ad})
 
     user = Processors().get_user_processor(public_id)
 
@@ -158,8 +157,7 @@ def delete_user(current_user, public_id: str) -> json:
     """
 
     if not current_user.admin:
-        return jsonify({"message": "No puede realizar esta función," + " " +
-                                "no eres un usuario administrador"})
+        return jsonify({"message": sign_no_ad})
 
     user = Processors().get_user_processor(public_id)
 
