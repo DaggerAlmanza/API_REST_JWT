@@ -42,6 +42,7 @@ def token_required(f):
 @app.route("/user", methods=["GET"])
 @token_required
 def get_all_users(current_user) -> json:
+
     """
     consulting every current user  in database, getting this dataset:
         admin": True o False,
@@ -49,7 +50,7 @@ def get_all_users(current_user) -> json:
         "password": "",
         "public_id": ""
     Args:
-        current_user ([type]): [description]
+        current_user (boolean): is admin in my database
 
     Returns:
         json: 
@@ -66,7 +67,18 @@ def get_all_users(current_user) -> json:
 
 @app.route("/user/<public_id>", methods=["GET"])
 @token_required
-def get_one_user(current_user, public_id: str):
+def get_one_user(current_user, public_id: str) -> json:
+
+    """
+    Get user for id public given
+
+    Args:
+        current_user (boolean): is admin in my database
+        public_id (str): is 
+
+    Returns:
+        json: information the user
+    """
 
     if not current_user.admin:
         return jsonify({"message": "No puede realizar esta función," + " " +
@@ -86,6 +98,14 @@ def get_one_user(current_user, public_id: str):
 @token_required
 def create_user(current_user) -> json:
 
+    """
+    Create a new user
+
+    Returns:
+        json: 
+            message: successful
+    """
+
     if not current_user.admin:
         return jsonify({"message": "No puede realizar esta función," + " " +
                                 "no eres un usuario administrador"})
@@ -101,6 +121,14 @@ def create_user(current_user) -> json:
 @app.route("/user/<public_id>", methods=["PUT"])
 @token_required 
 def promote_user(current_user, public_id: str) -> json:
+
+    """
+    promote user for admin the database, given of id public 
+
+    Returns:
+        json: 
+            message: successful or not
+    """
 
     if not current_user.admin:
         return jsonify({"message": "No puede realizar esta función," + " " +
@@ -122,6 +150,13 @@ def promote_user(current_user, public_id: str) -> json:
 @token_required
 def delete_user(current_user, public_id: str) -> json:
 
+    """
+    delete user of the idpublic given
+
+    Returns:
+        json: successful or not
+    """
+
     if not current_user.admin:
         return jsonify({"message": "No puede realizar esta función," + " " +
                                 "no eres un usuario administrador"})
@@ -138,6 +173,14 @@ def delete_user(current_user, public_id: str) -> json:
 
 @app.route("/login")
 def login() -> json:
+
+    """
+    Login user for getting token, available for 30 minutes 
+
+    Returns:
+        json: 
+            token generating
+    """
     auth = request.authorization
 
     if not auth or not auth.username or not auth.password:

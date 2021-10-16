@@ -14,7 +14,6 @@ class Processors():
         self.db.create_all()
 
     def get_data(self, user) -> dict:
-        print(type(user))
         user_data = {}
         user_data["public_id"] = user.public_id
         user_data["name"] = user.name
