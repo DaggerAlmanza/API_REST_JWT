@@ -62,8 +62,8 @@ def get_all_users(current_user) -> json:
     if not current_user.admin:
         return jsonify({"message": sign_no_ad})
 
-
     output = Processors().get_all_users_processor()
+
     return jsonify({"users": output})
 
 
