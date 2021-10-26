@@ -1,7 +1,8 @@
 ### API_REST_JWT
 Creación de una API con JWT
 
-La persona debe loguearse para poder tener la información que requiere de los usuarios, abajo tenemos dos de los usuarios, un usuario admin y otro que no lo es:
+La persona debe loguearse para poder tener la información que requiere de los usuarios, abajo tenemos dos de los usuarios, un usuario admin y otro que no lo es, el primero tiene acceso a toda la información, puede agregar usuarios, consultar, promover y eliminar, mientras que el segundo no.
+Usuarios actuales en la base de datos:
 
     User:
     {"name": "Juan", "password": "67890"} user
