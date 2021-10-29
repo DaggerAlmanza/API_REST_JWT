@@ -12,6 +12,11 @@ from main import app
 sign_no_ad = "No puede realizar esta función, no eres un usuario administrador"
 
 
+@app.route("/")
+def inicio() -> json:
+    return jsonify({"message": "Esta Al Pelo"})
+
+
 def token_required(f):
     @wraps(f)
     def decorated(*args, **kwargs) -> json:
